@@ -32,7 +32,7 @@ public class GlobalErrorWebExceptionHandler {
             ResourceNotFoundException ex, ServerWebExchange exchange) {
         ErrorCode ec = ex.getErrorCode() != null ? ex.getErrorCode() : ErrorCode.PROVIDER_NOT_FOUND;
         String traceId = TraceIdFilter.extractTraceId(exchange);
-        ecsLogger.logError(ec, ex.getMessage(), ex, traceId);
+        ecsLogger.logError(ec, ex, traceId);
         return Mono.just(ResponseEntity.status(ec.getHttpStatus())
                 .body(StandardResponse.error(ec.getHttpStatus(), ec.getBusinessCode(), ex.getMessage())));
     }
@@ -42,7 +42,7 @@ public class GlobalErrorWebExceptionHandler {
             DuplicateResourceException ex, ServerWebExchange exchange) {
         ErrorCode ec = ex.getErrorCode() != null ? ex.getErrorCode() : ErrorCode.NIT_DUPLICATE;
         String traceId = TraceIdFilter.extractTraceId(exchange);
-        ecsLogger.logError(ec, ex.getMessage(), ex, traceId);
+        ecsLogger.logError(ec, ex, traceId);
         return Mono.just(ResponseEntity.status(ec.getHttpStatus())
                 .body(StandardResponse.error(ec.getHttpStatus(), ec.getBusinessCode(), ex.getMessage())));
     }
@@ -52,7 +52,7 @@ public class GlobalErrorWebExceptionHandler {
             BusinessException ex, ServerWebExchange exchange) {
         ErrorCode ec = ex.getErrorCode() != null ? ex.getErrorCode() : ErrorCode.INTERNAL_ERROR;
         String traceId = TraceIdFilter.extractTraceId(exchange);
-        ecsLogger.logError(ec, ex.getMessage(), ex, traceId);
+        ecsLogger.logError(ec, ex, traceId);
         return Mono.just(ResponseEntity.status(ec.getHttpStatus())
                 .body(StandardResponse.error(ec.getHttpStatus(), ec.getBusinessCode(), ex.getMessage())));
     }
@@ -65,7 +65,7 @@ public class GlobalErrorWebExceptionHandler {
         String details = ex.getFieldErrors().stream()
                 .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
                 .collect(Collectors.joining(" | "));
-        ecsLogger.logError(ec, "Validation error: " + details, ex, traceId);
+        ecsLogger.logError(ec, ex, traceId);
         return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(StandardResponse.error(400, ec.getBusinessCode(),
                         "Validation error: " + details)));
@@ -76,7 +76,7 @@ public class GlobalErrorWebExceptionHandler {
             NoResourceFoundException ex, ServerWebExchange exchange) {
         ErrorCode ec = ErrorCode.RESOURCE_NOT_FOUND;
         String traceId = TraceIdFilter.extractTraceId(exchange);
-        ecsLogger.logError(ec, ex.getMessage(), ex, traceId);
+        ecsLogger.logError(ec, ex, traceId);
         return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(StandardResponse.error(404, ec.getBusinessCode(), ex.getMessage())));
     }

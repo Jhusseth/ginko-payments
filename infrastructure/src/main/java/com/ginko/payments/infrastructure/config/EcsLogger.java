@@ -21,7 +21,7 @@ public class EcsLogger {
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-    public void logError(ErrorCode errorCode, String message, Throwable cause, String traceId) {
+    public void logError(ErrorCode errorCode, Throwable cause, String traceId) {
         try {
             Map<String, Object> json = buildBaseJson(traceId);
 
@@ -48,7 +48,7 @@ public class EcsLogger {
     }
 
     public void logUnexpected(Throwable cause, String traceId) {
-        logError(ErrorCode.INTERNAL_ERROR, cause.getMessage(), cause, traceId);
+        logError(ErrorCode.INTERNAL_ERROR, cause, traceId);
     }
 
     private Map<String, Object> buildBaseJson(String traceId) {
