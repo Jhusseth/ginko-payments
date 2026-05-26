@@ -14,7 +14,6 @@ database "H2 Database" as DB
 
 == Create Payment Order ==
 CLIENT -> CONTROLLER: POST /api/payment-orders\n{ providerId, amount, description }
-CONCURRENT_OR_WITH_IDEMPOTENCY:
 note right CLIENT: Optional: Idempotency-Key header
 
 alt Has Idempotency-Key
@@ -48,7 +47,7 @@ alt Has Idempotency-Key
   end
 else No Idempotency-Key
   USECASE -> PROV_REPO: findById(providerId)
-  .. same flow as above without idempotency check ..
+  note right USECASE: same flow as above without idempotency check
 end
 
 == Transition Order Status ==

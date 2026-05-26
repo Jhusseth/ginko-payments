@@ -123,6 +123,28 @@ infrastructure adapters.
 H2 in-memory with the `r2dbc-h2` driver enables the full reactive stack without external infrastructure. Schema
 initialization is done via `schema.sql`.
 
+## Diagrams
+
+### Domain Model — Class Diagram
+Domain entities (`Provider`, `PaymentOrder`), enums, exceptions, and the port interfaces (use cases and repositories) that define the hexagonal architecture contracts.
+
+![Class Diagram](docs/class-diagram.png)
+
+### Database Schema — Entity-Relationship Model
+Relational model of the H2 database: `providers` and `payment_orders` tables, their columns, constraints, and the foreign-key relationship between them.
+
+![Entity Model](docs/entity-model.png)
+
+### Provider Interaction — Sequence Diagram
+End-to-end flows for creating, listing, updating, and changing the status of providers, including duplicate NIT validation.
+
+![Interaction Diagram](docs/interaction-diagram.png)
+
+### Payment Order Interaction — Sequence Diagram
+End-to-end flows for creating payment orders (with idempotency support), transitioning status with optimistic locking, generating the total-paid report, and querying orders about to expire.
+
+![Payment Order Interaction](docs/payment-order-interaction.png)
+
 ## Features Implemented
 
 ### Module 1 - Provider Management
