@@ -36,6 +36,10 @@ The application starts at `http://localhost:8080`.
 - **Swagger UI**: http://localhost:8080/api/v1/swagger-ui.html
 - **OpenAPI spec**: http://localhost:8080/api/v1/api-docs
 
+## Postman Collection
+
+Import `docs/ginko-payments.postman_collection.json` into Postman to test all endpoints with predefined examples.
+
 ## H2 Console
 
 http://localhost:8080/h2-console

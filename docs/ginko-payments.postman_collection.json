@@ -1,0 +1,478 @@
+{
+  "info": {
+    "name": "Ginko Payments API",
+    "description": "Colección de endpoints REST para la API de Ginko Payments.\n\nFlujo recomendado:\n1. Health Check\n2. Crear Proveedor → copiar {{providerId}}\n3. Listar Proveedores\n4. Obtener Proveedor por ID\n5. Actualizar Proveedor\n6. Cambiar Estado Proveedor\n7. Crear Orden de Pago → copiar {{orderId}}\n8. Listar Órdenes de Pago\n9. Obtener Orden por ID\n10. Cambiar Estado Orden\n11. Reporte de Pagos\n12. Órdenes por Vencer",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "ginko-payments"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "providerId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idempotencyKey",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "health"]
+            },
+            "description": "Verifica el estado de la aplicación y sus componentes (base de datos, etc.)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"status\": \"UP\",\n  \"components\": {\n    \"diskSpace\": {\n      \"status\": \"UP\"\n    },\n    \"ping\": {\n      \"status\": \"UP\"\n    },\n    \"r2dbc\": {\n      \"status\": \"UP\",\n      \"details\": {\n        \"database\": \"H2\"\n      }\n    }\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Providers",
+      "item": [
+        {
+          "name": "POST Crear Proveedor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Proveedor ABC\",\n  \"taxIdentificationNumber\": \"NIT123456789\",\n  \"email\": \"contacto@proveedorabc.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/providers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "providers"]
+            },
+            "description": "Crea un nuevo proveedor. Requiere nombre, NIT y email."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('providerId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Created",
+              "status": "Created",
+              "code": 201,
+              "header": [],
+              "body": "{\n  \"meta\": {\n    \"status\": \"Created\",\n    \"statusCode\": 201\n  },\n  \"data\": {\n    \"id\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n    \"name\": \"Proveedor ABC\",\n    \"taxIdentificationNumber\": \"NIT123456789\",\n    \"email\": \"contacto@proveedorabc.com\",\n    \"status\": \"ACTIVE\"\n  }\n}"
+            },
+            {
+              "name": "Conflict - Duplicate NIT",
+              "status": "Conflict",
+              "code": 409,
+              "header": [],
+              "body": "{\n  \"meta\": {\n    \"status\": \"Conflict\",\n    \"statusCode\": 409\n  },\n  \"data\": {\n    \"code\": \"NIT_DUPLICATE\",\n    \"message\": \"A provider with NIT 'NIT123456789' already exists\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET Listar Proveedores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/providers?status=ACTIVE&page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "providers"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "description": "Filtrar por estado (ACTIVE, INACTIVE)"
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Número de página (desde 0)"
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "description": "Elementos por página (1-500)"
+                }
+              ]
+            },
+            "description": "Lista todos los proveedores con paginación y filtro opcional por estado."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"meta\": {\n    \"status\": \"OK\",\n    \"statusCode\": 200,\n    \"totalElements\": 1,\n    \"page\": 0,\n    \"size\": 20,\n    \"totalPages\": 1\n  },\n  \"data\": [\n    {\n      \"id\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n      \"name\": \"Proveedor ABC\",\n      \"taxIdentificationNumber\": \"NIT123456789\",\n      \"email\": \"contacto@proveedorabc.com\",\n      \"status\": \"ACTIVE\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET Obtener Proveedor por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/providers/{{providerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "providers", "{{providerId}}"]
+            },
+            "description": "Obtiene un proveedor por su ID."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"meta\": {\n    \"status\": \"OK\",\n    \"statusCode\": 200\n  },\n  \"data\": {\n    \"id\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n    \"name\": \"Proveedor ABC\",\n    \"taxIdentificationNumber\": \"NIT123456789\",\n    \"email\": \"contacto@proveedorabc.com\",\n    \"status\": \"ACTIVE\"\n  }\n}"
+            },
+            {
+              "name": "Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "header": [],
+              "body": "{\n  \"meta\": {\n    \"status\": \"Not Found\",\n    \"statusCode\": 404\n  },\n  \"data\": {\n    \"code\": \"PROVIDER_NOT_FOUND\",\n    \"message\": \"Provider not found with id: a1b2c3d4-e5f6-7890-abcd-ef1234567890\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT Actualizar Proveedor",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Proveedor ABC Actualizado\",\n  \"taxIdentificationNumber\": \"NIT123456789\",\n  \"email\": \"nuevo-contacto@proveedorabc.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/providers/{{providerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "providers", "{{providerId}}"]
+            },
+            "description": "Actualiza los datos de un proveedor existente."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"meta\": {\n    \"status\": \"OK\",\n    \"statusCode\": 200\n  },\n  \"data\": {\n    \"id\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n    \"name\": \"Proveedor ABC Actualizado\",\n    \"taxIdentificationNumber\": \"NIT123456789\",\n    \"email\": \"nuevo-contacto@proveedorabc.com\",\n    \"status\": \"ACTIVE\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH Cambiar Estado Proveedor",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"INACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/providers/{{providerId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "providers", "{{providerId}}", "status"]
+            },
+            "description": "Cambia el estado de un proveedor a ACTIVE o INACTIVE."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"meta\": {\n    \"status\": \"OK\",\n    \"statusCode\": 200\n  },\n  \"data\": {\n    \"id\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n    \"name\": \"Proveedor ABC\",\n    \"taxIdentificationNumber\": \"NIT123456789\",\n    \"email\": \"contacto@proveedorabc.com\",\n    \"status\": \"INACTIVE\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Payment Orders",
+      "item": [
+        {
+          "name": "POST Crear Orden de Pago",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotencyKey}}",
+                "description": "Opcional: UUID para garantizar idempotencia"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"providerId\": \"{{providerId}}\",\n  \"amount\": 1500.00,\n  \"description\": \"Pago de factura mensual - servicios de consultoría\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payment-orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payment-orders"]
+            },
+            "description": "Crea una nueva orden de pago. El proveedor debe existir y estar activo."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('orderId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Created",
+              "status": "Created",
+              "code": 201,
+              "header": [],
+              "body": "{\n  \"meta\": {\n    \"status\": \"Created\",\n    \"statusCode\": 201\n  },\n  \"data\": {\n    \"id\": \"b2c3d4e5-f6a7-8901-bcde-f12345678901\",\n    \"providerId\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n    \"providerName\": \"Proveedor ABC\",\n    \"amount\": 1500.00,\n    \"description\": \"Pago de factura mensual - servicios de consultoría\",\n    \"creationDate\": \"2026-05-26T10:30:00\",\n    \"updateDate\": \"2026-05-26T10:30:00\",\n    \"status\": \"DRAFT\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET Listar Órdenes de Pago",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payment-orders?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payment-orders"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Filtrar por estado (DRAFT, APPROVED, REJECTED, PAID)"
+                },
+                {
+                  "key": "providerId",
+                  "value": "",
+                  "description": "Filtrar por ID de proveedor"
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Número de página (desde 0)"
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "description": "Elementos por página (1-500)"
+                }
+              ]
+            },
+            "description": "Lista órdenes de pago con paginación y filtros opcionales."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"meta\": {\n    \"status\": \"OK\",\n    \"statusCode\": 200,\n    \"totalElements\": 1,\n    \"page\": 0,\n    \"size\": 20,\n    \"totalPages\": 1\n  },\n  \"data\": [\n    {\n      \"id\": \"b2c3d4e5-f6a7-8901-bcde-f12345678901\",\n      \"providerId\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n      \"providerName\": \"Proveedor ABC\",\n      \"amount\": 1500.00,\n      \"description\": \"Pago de factura mensual - servicios de consultoría\",\n      \"creationDate\": \"2026-05-26T10:30:00\",\n      \"updateDate\": \"2026-05-26T10:30:00\",\n      \"status\": \"DRAFT\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET Obtener Orden de Pago por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payment-orders/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payment-orders", "{{orderId}}"]
+            },
+            "description": "Obtiene una orden de pago por su ID."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"meta\": {\n    \"status\": \"OK\",\n    \"statusCode\": 200\n  },\n  \"data\": {\n    \"id\": \"b2c3d4e5-f6a7-8901-bcde-f12345678901\",\n    \"providerId\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n    \"providerName\": \"Proveedor ABC\",\n    \"amount\": 1500.00,\n    \"description\": \"Pago de factura mensual - servicios de consultoría\",\n    \"creationDate\": \"2026-05-26T10:30:00\",\n    \"updateDate\": \"2026-05-26T10:30:00\",\n    \"status\": \"DRAFT\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH Cambiar Estado de Orden",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payment-orders/{{orderId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payment-orders", "{{orderId}}", "status"]
+            },
+            "description": "Transiciona el estado de una orden de pago.\nTransiciones válidas: DRAFT→APPROVED, DRAFT→REJECTED, APPROVED→PAID."
+          },
+          "response": [
+            {
+              "name": "Success - Approved",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"meta\": {\n    \"status\": \"OK\",\n    \"statusCode\": 200\n  },\n  \"data\": {\n    \"id\": \"b2c3d4e5-f6a7-8901-bcde-f12345678901\",\n    \"providerId\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n    \"providerName\": \"Proveedor ABC\",\n    \"amount\": 1500.00,\n    \"description\": \"Pago de factura mensual - servicios de consultoría\",\n    \"creationDate\": \"2026-05-26T10:30:00\",\n    \"updateDate\": \"2026-05-26T11:00:00\",\n    \"status\": \"APPROVED\"\n  }\n}"
+            },
+            {
+              "name": "Bad Request - Invalid Transition",
+              "status": "Bad Request",
+              "code": 400,
+              "header": [],
+              "body": "{\n  \"meta\": {\n    \"status\": \"Bad Request\",\n    \"statusCode\": 400\n  },\n  \"data\": {\n    \"code\": \"INVALID_TRANSITION\",\n    \"message\": \"Cannot transition from DRAFT to PAID\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET Reporte de Pagos por Proveedor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payment-orders/report?providerId={{providerId}}&startDate=2026-01-01&endDate=2026-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payment-orders", "report"],
+              "query": [
+                {
+                  "key": "providerId",
+                  "value": "{{providerId}}",
+                  "description": "ID del proveedor"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2026-01-01",
+                  "description": "Fecha inicial (ISO 8601: yyyy-MM-dd)"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-12-31",
+                  "description": "Fecha final (ISO 8601: yyyy-MM-dd)"
+                }
+              ]
+            },
+            "description": "Obtiene el total pagado a un proveedor en un rango de fechas."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"meta\": {\n    \"status\": \"OK\",\n    \"statusCode\": 200\n  },\n  \"data\": {\n    \"providerId\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n    \"providerName\": \"Proveedor ABC\",\n    \"totalPaid\": 1500.00,\n    \"startDate\": \"2026-01-01\",\n    \"endDate\": \"2026-12-31\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET Órdenes por Vencer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payment-orders/about-to-expire?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payment-orders", "about-to-expire"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Número de página (desde 0)"
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "description": "Elementos por página (1-500)"
+                }
+              ]
+            },
+            "description": "Lista órdenes APPROVED con más de 30 días sin pago (próximas a vencer)."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"meta\": {\n    \"status\": \"OK\",\n    \"statusCode\": 200,\n    \"totalElements\": 0,\n    \"page\": 0,\n    \"size\": 20,\n    \"totalPages\": 0\n  },\n  \"data\": []\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
