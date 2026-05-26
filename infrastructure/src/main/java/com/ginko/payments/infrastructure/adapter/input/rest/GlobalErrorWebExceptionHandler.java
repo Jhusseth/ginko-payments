@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
+import org.springframework.web.reactive.resource.NoResourceFoundException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -68,6 +69,16 @@ public class GlobalErrorWebExceptionHandler {
         return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(StandardResponse.error(400, ec.getBusinessCode(),
                         "Validation error: " + details)));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public Mono<ResponseEntity<StandardResponse<StandardResponse.ErrorData>>> handleResource(
+            NoResourceFoundException ex, ServerWebExchange exchange) {
+        ErrorCode ec = ErrorCode.RESOURCE_NOT_FOUND;
+        String traceId = TraceIdFilter.extractTraceId(exchange);
+        ecsLogger.logError(ec, ex.getMessage(), ex, traceId);
+        return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(StandardResponse.error(404, ec.getBusinessCode(), ex.getMessage())));
     }
 
     @ExceptionHandler(Throwable.class)

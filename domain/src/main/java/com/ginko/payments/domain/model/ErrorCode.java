@@ -21,6 +21,9 @@ public enum ErrorCode {
     FIELD_VALIDATION("ERR-VAL-001", "FIELD_VALIDATION",
             "Validation error in input fields", 400),
 
+    RESOURCE_NOT_FOUND("ERR-RES-001", "RESOURCE_NOT_FOUND",
+            "The requested resource could not be found.", 404),
+
     INTERNAL_ERROR("ERR-GEN-001", "INTERNAL_ERROR",
             "An unexpected server error occurred", 500),
     SERVICE_UNAVAILABLE("ERR-GEN-002", "SERVICE_UNAVAILABLE",
