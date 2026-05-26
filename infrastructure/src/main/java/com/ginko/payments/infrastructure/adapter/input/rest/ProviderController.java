@@ -65,6 +65,12 @@ public class ProviderController {
             @RequestParam(required = false) ProviderStatus status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
+        if (page < 0) {
+            return Mono.error(new BusinessException(ErrorCode.FIELD_VALIDATION, "page must be >= 0"));
+        }
+        if (size < 1 || size > 500) {
+            return Mono.error(new BusinessException(ErrorCode.FIELD_VALIDATION, "size must be between 1 and 500"));
+        }
         Mono<Long> total = useCase.count(status);
         var content = useCase.list(status, page, size)
                 .map(ProviderResponse::fromDomain)

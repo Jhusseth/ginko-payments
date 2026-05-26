@@ -81,6 +81,10 @@ public class StandardResponse<T> {
             return statusCode;
         }
 
+        public Long getTotalElements() {
+            return totalElements;
+        }
+
         public Integer getPage() {
             return page;
         }

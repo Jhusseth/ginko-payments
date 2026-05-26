@@ -27,6 +27,10 @@ springdoc:
     path: /api/v1/swagger-ui.html
     operations-sorter: method
 
+app:
+  cors:
+    allowed-origins: "http://localhost:8080"
+
 server:
   port: 8080
 
