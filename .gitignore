@@ -1,0 +1,37 @@
+# Maven
+target/
+*.jar
+*.war
+*.zip
+*.tar.gz
+*.rar
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+*.class
+*.factorypath
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Logs
+*.log
+logs/
+
+# Env
+.env
+*.env.local
+
+# Build
+build/
+out/

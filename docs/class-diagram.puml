@@ -1,0 +1,160 @@
+@startuml
+!theme plain
+skinparam backgroundColor transparent
+skinparam classBackgroundColor white
+skinparam classBorderColor #0066cc
+skinparam arrowColor #333333
+skinparam packageBackgroundColor #f0f4ff
+skinparam packageBorderColor #0066cc
+
+package "Domain Model" {
+  class Provider {
+    - id: Long
+    - name: String
+    - taxIdentificationNumber: String
+    - email: String
+    - status: ProviderStatus
+    + Provider(name, nit, email)
+    + Provider(id, name, nit, email, status)
+    + withId(id): Provider
+    + withStatus(newStatus): Provider
+    + withUpdatedData(name, nit, email): Provider
+    + isActive(): boolean
+    + getId(): Long
+    + getName(): String
+    + getTaxIdentificationNumber(): String
+    + getEmail(): String
+    + getStatus(): ProviderStatus
+  }
+
+  class PaymentOrder {
+    - id: Long
+    - providerId: Long
+    - providerName: String
+    - amount: BigDecimal
+    - description: String
+    - creationDate: LocalDateTime
+    - status: OrderStatus
+    - version: Long
+    - idempotencyKey: String
+    + PaymentOrder(providerId, providerName, amount, description)
+    + PaymentOrder(id, providerId, providerName, amount, description, creationDate, status, version, idempotencyKey)
+    + transitionTo(newStatus): PaymentOrder
+    + withId(id): PaymentOrder
+    + withVersion(version): PaymentOrder
+    + withIdempotencyKey(key): PaymentOrder
+    + isAboutToExpire(limitDays): boolean
+    + getId(): Long
+    + getProviderId(): Long
+    + getProviderName(): String
+    + getAmount(): BigDecimal
+    + getDescription(): String
+    + getCreationDate(): LocalDateTime
+    + getStatus(): OrderStatus
+    + getVersion(): Long
+    + getIdempotencyKey(): String
+  }
+
+  enum ProviderStatus {
+    ACTIVE
+    INACTIVE
+  }
+
+  enum OrderStatus {
+    DRAFT
+    APPROVED
+    REJECTED
+    PAID
+  }
+
+  enum ErrorCode {
+    PROVIDER_NOT_FOUND
+    NIT_DUPLICATE
+    INVALID_PROVIDER_STATUS
+    ORDER_NOT_FOUND
+    INVALID_TRANSITION
+    INACTIVE_PROVIDER
+    ORDER_CONCURRENCY
+    FIELD_VALIDATION
+    INTERNAL_ERROR
+    SERVICE_UNAVAILABLE
+    + getTechnicalCode(): String
+    + getBusinessCode(): String
+    + getMessage(): String
+    + getHttpStatus(): int
+  }
+
+  class BusinessException {
+    - errorCode: ErrorCode
+    + BusinessException(errorCode)
+    + BusinessException(errorCode, detail)
+    + BusinessException(errorCode, detail, cause)
+    + getErrorCode(): ErrorCode
+  }
+
+  ProviderStatus <.. Provider
+  OrderStatus <.. PaymentOrder
+  ErrorCode <.. BusinessException
+  BusinessException <|.. PaymentOrder : throws
+}
+
+package "Ports (Interfaces)" {
+  interface "ProviderUseCase" as PUC {
+    + create(name, nit, email): Mono<Provider>
+    + list(status, page, size): Flux<Provider>
+    + count(status): Mono<Long>
+    + getById(id): Mono<Provider>
+    + update(id, name, nit, email): Mono<Provider>
+    + changeStatus(id, newStatus): Mono<Provider>
+  }
+
+  interface "PaymentOrderUseCase" as POUC {
+    + create(providerId, amount, description, idempotencyKey): Mono<PaymentOrder>
+    + list(status, providerId, page, size): Flux<PaymentOrder>
+    + count(status, providerId): Mono<Long>
+    + getById(id): Mono<PaymentOrder>
+    + transitionStatus(id, newStatus): Mono<PaymentOrder>
+    + reportTotalPaid(providerId, startDate, endDate): Mono<BigDecimal>
+    + ordersAboutToExpire(page, size): Flux<PaymentOrder>
+    + countAboutToExpire(): Mono<Long>
+  }
+
+  interface "ProviderRepositoryPort" as PRP {
+    + save(provider): Mono<Provider>
+    + findById(id): Mono<Provider>
+    + findByTaxIdentificationNumber(nit): Mono<Provider>
+    + findAll(page, size): Flux<Provider>
+    + findByStatus(status, page, size): Flux<Provider>
+    + countAll(): Mono<Long>
+    + countByStatus(status): Mono<Long>
+    + existsByTaxIdentificationNumber(nit): Mono<Boolean>
+  }
+
+  interface "PaymentOrderRepositoryPort" as PORP {
+    + save(order): Mono<PaymentOrder>
+    + findById(id): Mono<PaymentOrder>
+    + findByIdempotencyKey(key): Mono<PaymentOrder>
+    + findAll(page, size): Flux<PaymentOrder>
+    + findByStatus(status, page, size): Flux<PaymentOrder>
+    + findByProviderId(providerId, page, size): Flux<PaymentOrder>
+    + findByStatusAndProviderId(status, providerId, page, size): Flux<PaymentOrder>
+    + totalPaidByProviderInRange(providerId, start, end): Mono<BigDecimal>
+    + findOrdersAboutToExpire(days, page, size): Flux<PaymentOrder>
+    + countOrdersAboutToExpire(days): Mono<Long>
+    + updateStatusWithVersion(id, newStatus, version): Mono<Boolean>
+  }
+}
+
+note left of Provider
+  Immutable domain entity
+  with behavioral methods
+end note
+
+note left of PaymentOrder
+  State machine with
+  VALID_TRANSITIONS map:
+  DRAFT -> APPROVED, REJECTED
+  APPROVED -> PAID
+end note
+
+@enduml

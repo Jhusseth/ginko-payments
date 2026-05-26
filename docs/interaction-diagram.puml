@@ -1,0 +1,64 @@
+@startuml
+!theme plain
+skinparam backgroundColor transparent
+skinparam actorBorderColor #0066cc
+skinparam participantBorderColor #0066cc
+skinparam arrowColor #333333
+
+actor Client as CLIENT
+participant "ProviderController" as CONTROLLER
+participant "ProviderUseCaseImpl" as USECASE
+participant "ProviderRepositoryPort" as REPO
+database "H2 Database" as DB
+
+== Create Provider ==
+CLIENT -> CONTROLLER: POST /api/providers\n{ name, nit, email }
+CONTROLLER -> USECASE: create(name, nit, email)
+USECASE -> REPO: existsByTaxIdentificationNumber(nit)
+REPO -> DB: SELECT COUNT(*) FROM providers\nWHERE tax_identification_number = ?
+DB --> REPO: false (not duplicate)
+REPO --> USECASE
+USECASE -> REPO: save(new Provider(...))
+REPO -> DB: INSERT INTO providers (...)
+DB --> REPO: ProviderEntity with id
+REPO --> USECASE: Provider
+USECASE --> CONTROLLER: Provider
+CONTROLLER --> CLIENT: 201 Created + ProviderResponse
+
+== List Providers ==
+CLIENT -> CONTROLLER: GET /api/providers?status=ACTIVE&page=0&size=20
+CONTROLLER -> USECASE: count(ACTIVE), list(ACTIVE, 0, 20)
+USECASE -> REPO: countByStatus(ACTIVE), findByStatus(ACTIVE, 0, 20)
+REPO -> DB: SELECT COUNT(*), SELECT * FROM providers\nWHERE status = 'ACTIVE' LIMIT 20 OFFSET 0
+DB --> REPO
+REPO --> USECASE
+USECASE --> CONTROLLER: total + Flux<Provider>
+CONTROLLER --> CLIENT: 200 + PagedResponse<ProviderResponse>
+
+== Update Provider ==
+CLIENT -> CONTROLLER: PUT /api/providers/{id}\n{ name, nit, email }
+CONTROLLER -> USECASE: update(id, name, nit, email)
+USECASE -> REPO: findById(id)
+REPO --> USECASE: Provider (existing)
+USECASE -> REPO: findByTaxIdentificationNumber(nit)
+REPO --> USECASE: Provider or empty
+alt NIT belongs to different provider
+  USECASE --> CONTROLLER: error 409 DuplicateResourceException
+else NIT is ok
+  USECASE -> REPO: save(provider.withUpdatedData(...))
+  REPO --> USECASE: Provider (updated)
+  USECASE --> CONTROLLER: Provider
+  CONTROLLER --> CLIENT: 200 + ProviderResponse
+end
+
+== Change Provider Status ==
+CLIENT -> CONTROLLER: PATCH /api/providers/{id}/status\n{ status: "INACTIVE" }
+CONTROLLER -> USECASE: changeStatus(id, INACTIVE)
+USECASE -> REPO: findById(id)
+REPO --> USECASE: Provider
+USECASE -> REPO: save(provider.withStatus(INACTIVE))
+REPO --> USECASE: Provider (inactive)
+USECASE --> CONTROLLER: Provider
+CONTROLLER --> CLIENT: 200 + ProviderResponse
+
+@enduml

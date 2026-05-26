@@ -1,0 +1,49 @@
+@startuml
+!theme plain
+skinparam backgroundColor transparent
+skinparam entityBackgroundColor white
+skinparam entityBorderColor #0066cc
+
+' Enable C4-like layout
+skinparam packageStyle rectangle
+
+package "Database Schema (H2 via R2DBC)" {
+  entity "providers" as PROVIDERS {
+    + id: BIGINT (PK)
+    --
+    name: VARCHAR(255) NOT NULL
+    tax_identification_number: VARCHAR(100) NOT NULL UNIQUE
+    email: VARCHAR(255) NOT NULL
+    status: VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
+  }
+
+  entity "payment_orders" as PAYMENT_ORDERS {
+    + id: BIGINT (PK)
+    --
+    provider_id: BIGINT NOT NULL (FK)
+    provider_name: VARCHAR(255) NOT NULL
+    amount: DECIMAL(19,2) NOT NULL
+    description: VARCHAR(500)
+    creation_date: TIMESTAMP NOT NULL
+    status: VARCHAR(20) NOT NULL DEFAULT 'DRAFT'
+    version: BIGINT DEFAULT 0
+    idempotency_key: VARCHAR(255) UNIQUE
+  }
+
+  PROVIDERS ||--o{ PAYMENT_ORDERS : "has"
+}
+
+note top of PROVIDERS
+  Provider status values stored as strings:
+  ACTIVE, INACTIVE
+end note
+
+note top of PAYMENT_ORDERS
+  Order status values stored as strings:
+  DRAFT, APPROVED, REJECTED, PAID
+
+  Optimistic locking via version column:
+  UPDATE ... WHERE id = ? AND version = ?
+end note
+
+@enduml

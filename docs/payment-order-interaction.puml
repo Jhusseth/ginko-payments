@@ -1,0 +1,109 @@
+@startuml
+!theme plain
+skinparam backgroundColor transparent
+skinparam actorBorderColor #0066cc
+skinparam participantBorderColor #0066cc
+skinparam arrowColor #333333
+
+actor Client as CLIENT
+participant "PaymentOrderController" as CONTROLLER
+participant "PaymentOrderUseCaseImpl" as USECASE
+participant "ProviderRepositoryPort" as PROV_REPO
+participant "PaymentOrderRepositoryPort" as ORDER_REPO
+database "H2 Database" as DB
+
+== Create Payment Order ==
+CLIENT -> CONTROLLER: POST /api/payment-orders\n{ providerId, amount, description }
+CONCURRENT_OR_WITH_IDEMPOTENCY:
+note right CLIENT: Optional: Idempotency-Key header
+
+alt Has Idempotency-Key
+  CONTROLLER -> USECASE: create(providerId, amount, description, key)
+  USECASE -> ORDER_REPO: findByIdempotencyKey(key)
+  ORDER_REPO -> DB: SELECT * FROM payment_orders\nWHERE idempotency_key = ?
+  DB --> ORDER_REPO
+  alt Order exists
+    ORDER_REPO --> USECASE: existing PaymentOrder
+    USECASE --> CONTROLLER: existing PaymentOrder
+    CONTROLLER --> CLIENT: 201 Created (existing)
+  else No existing order
+    ORDER_REPO --> USECASE: empty
+    USECASE -> PROV_REPO: findById(providerId)
+    PROV_REPO -> DB: SELECT * FROM providers WHERE id = ?
+    DB --> PROV_REPO
+    PROV_REPO --> USECASE: Provider or empty
+
+    alt Provider not found
+      USECASE --> CONTROLLER: error 404
+    else Provider inactive
+      USECASE --> CONTROLLER: error 400
+    else Provider active
+      USECASE -> ORDER_REPO: save(new PaymentOrder(...))
+      ORDER_REPO -> DB: INSERT INTO payment_orders (...)
+      DB --> ORDER_REPO
+      ORDER_REPO --> USECASE: PaymentOrder
+      USECASE --> CONTROLLER: PaymentOrder
+      CONTROLLER --> CLIENT: 201 Created
+    end
+  end
+else No Idempotency-Key
+  USECASE -> PROV_REPO: findById(providerId)
+  .. same flow as above without idempotency check ..
+end
+
+== Transition Order Status ==
+CLIENT -> CONTROLLER: PATCH /api/payment-orders/{id}/status\n{ status: "APPROVED" }
+CONTROLLER -> USECASE: transitionStatus(id, APPROVED)
+USECASE -> ORDER_REPO: findById(id)
+ORDER_REPO -> DB: SELECT * FROM payment_orders WHERE id = ?
+DB --> ORDER_REPO: PaymentOrderEntity
+
+alt Order not found
+  ORDER_REPO --> USECASE: empty
+  USECASE --> CONTROLLER: error 404
+else Order found
+  USECASE -> USECASE: order.transitionTo(APPROVED)
+  alt Invalid transition (e.g. DRAFT -> PAID)
+    USECASE --> CONTROLLER: error 400 BusinessException
+  else Valid transition
+    USECASE -> ORDER_REPO: updateStatusWithVersion(id, APPROVED, version)
+    ORDER_REPO -> DB: UPDATE payment_orders SET status=?, version=version+1\nWHERE id=? AND version=?
+    DB --> ORDER_REPO: rows affected (0 or 1)
+
+    alt Optimistic lock failed (concurrent update)
+      ORDER_REPO --> USECASE: false
+      USECASE --> CONTROLLER: error 409 Concurrency
+    else Optimistic lock succeeded
+      ORDER_REPO --> USECASE: true
+      USECASE --> CONTROLLER: PaymentOrder (updated)
+      CONTROLLER --> CLIENT: 200 + PaymentOrderResponse
+    end
+  end
+end
+
+== Report Total Paid ==
+CLIENT -> CONTROLLER: GET /api/payment-orders/report\n?providerId=1&startDate=2026-01-01&endDate=2026-12-31
+CONTROLLER -> USECASE: reportTotalPaid(1, startDate, endDate)
+USECASE -> PROV_REPO: findById(1)
+PROV_REPO --> USECASE: Provider
+USECASE -> ORDER_REPO: totalPaidByProviderInRange(1, start, end)
+ORDER_REPO -> DB: SELECT COALESCE(SUM(amount),0)\nFROM payment_orders\nWHERE provider_id=1 AND status='PAID'\nAND creation_date BETWEEN ? AND ?
+DB --> ORDER_REPO: BigDecimal
+ORDER_REPO --> USECASE: total
+USECASE --> CONTROLLER: total
+CONTROLLER --> CLIENT: 200 + ReportResponse
+
+== Orders About to Expire ==
+CLIENT -> CONTROLLER: GET /api/payment-orders/about-to-expire?page=0&size=20
+CONTROLLER -> USECASE: ordersAboutToExpire(0, 20)
+USECASE -> ORDER_REPO: findOrdersAboutToExpire(30 days, 0, 20)
+ORDER_REPO -> DB: SELECT * FROM payment_orders\nWHERE status='APPROVED'\nAND creation_date <= ?\nLIMIT 20 OFFSET 0
+DB --> ORDER_REPO
+ORDER_REPO --> USECASE: Flux<PaymentOrder>
+CONTROLLER -> USECASE: countAboutToExpire()
+USECASE -> ORDER_REPO: countOrdersAboutToExpire(30)
+ORDER_REPO --> USECASE: Mono<Long>
+USECASE --> CONTROLLER: Flux + Long
+CONTROLLER --> CLIENT: 200 + PagedResponse<PaymentOrderResponse>
+
+@enduml
