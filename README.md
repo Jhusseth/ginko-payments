@@ -193,7 +193,7 @@ End-to-end flows for creating payment orders (with idempotency support), transit
 ## Pending
 
 - Add authentication/authorization (Spring Security + JWT)
-- Migrate to PostgreSQL with Testcontainers for more realistic integration tests
+- Migrate to PostgreSQL/MySQL with containers for more realistic integration tests
 - Add Colombian NIT format validation
 - Add Rate Limiter per endpoint with Resilience4j
 - Add automatic mapping with MapStruct if the number of DTOs grows
