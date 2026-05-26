@@ -134,7 +134,7 @@ Relational model of the H2 database: `providers` and `payment_orders` tables, th
 ### Provider Interaction — Sequence Diagram
 End-to-end flows for creating, listing, updating, and changing the status of providers, including duplicate NIT validation.
 
-![Interaction Diagram](docs/interaction-diagram.png)
+![Interaction Diagram](docs/providers-interaction.png)
 
 ### Payment Order Interaction — Sequence Diagram
 End-to-end flows for creating payment orders (with idempotency support), transitioning status with optimistic locking, generating the total-paid report, and querying orders about to expire.

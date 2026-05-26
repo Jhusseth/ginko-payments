@@ -12,7 +12,7 @@ participant "ProviderRepositoryPort" as REPO
 database "H2 Database" as DB
 
 == Create Provider ==
-CLIENT -> CONTROLLER: POST /api/providers\n{ name, nit, email }
+CLIENT -> CONTROLLER: POST /api/v1/providers\n{ name, nit, email }
 CONTROLLER -> USECASE: create(name, nit, email)
 USECASE -> REPO: existsByTaxIdentificationNumber(nit)
 REPO -> DB: SELECT COUNT(*) FROM providers\nWHERE tax_identification_number = ?
@@ -26,7 +26,7 @@ USECASE --> CONTROLLER: Provider
 CONTROLLER --> CLIENT: 201 Created + ProviderResponse
 
 == List Providers ==
-CLIENT -> CONTROLLER: GET /api/providers?status=ACTIVE&page=0&size=20
+CLIENT -> CONTROLLER: GET /api/v1/providers?status=ACTIVE&page=0&size=20
 CONTROLLER -> USECASE: count(ACTIVE), list(ACTIVE, 0, 20)
 USECASE -> REPO: countByStatus(ACTIVE), findByStatus(ACTIVE, 0, 20)
 REPO -> DB: SELECT COUNT(*), SELECT * FROM providers\nWHERE status = 'ACTIVE' LIMIT 20 OFFSET 0
@@ -36,7 +36,7 @@ USECASE --> CONTROLLER: total + Flux<Provider>
 CONTROLLER --> CLIENT: 200 + PagedResponse<ProviderResponse>
 
 == Update Provider ==
-CLIENT -> CONTROLLER: PUT /api/providers/{id}\n{ name, nit, email }
+CLIENT -> CONTROLLER: PUT /api/v1/providers/{id}\n{ name, nit, email }
 CONTROLLER -> USECASE: update(id, name, nit, email)
 USECASE -> REPO: findById(id)
 REPO --> USECASE: Provider (existing)
@@ -52,7 +52,7 @@ else NIT is ok
 end
 
 == Change Provider Status ==
-CLIENT -> CONTROLLER: PATCH /api/providers/{id}/status\n{ status: "INACTIVE" }
+CLIENT -> CONTROLLER: PATCH /api/v1/providers/{id}/status\n{ status: "INACTIVE" }
 CONTROLLER -> USECASE: changeStatus(id, INACTIVE)
 USECASE -> REPO: findById(id)
 REPO --> USECASE: Provider

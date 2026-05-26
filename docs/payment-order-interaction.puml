@@ -13,7 +13,7 @@ participant "PaymentOrderRepositoryPort" as ORDER_REPO
 database "H2 Database" as DB
 
 == Create Payment Order ==
-CLIENT -> CONTROLLER: POST /api/payment-orders\n{ providerId, amount, description }
+CLIENT -> CONTROLLER: POST /api/v1/payment-orders\n{ providerId, amount, description }
 note right CLIENT: Optional: Idempotency-Key header
 
 alt Has Idempotency-Key
@@ -51,7 +51,7 @@ else No Idempotency-Key
 end
 
 == Transition Order Status ==
-CLIENT -> CONTROLLER: PATCH /api/payment-orders/{id}/status\n{ status: "APPROVED" }
+CLIENT -> CONTROLLER: PATCH /api/v1/payment-orders/{id}/status\n{ status: "APPROVED" }
 CONTROLLER -> USECASE: transitionStatus(id, APPROVED)
 USECASE -> ORDER_REPO: findById(id)
 ORDER_REPO -> DB: SELECT * FROM payment_orders WHERE id = ?
@@ -81,7 +81,7 @@ else Order found
 end
 
 == Report Total Paid ==
-CLIENT -> CONTROLLER: GET /api/payment-orders/report\n?providerId={uuid}&startDate=2026-01-01&endDate=2026-12-31
+CLIENT -> CONTROLLER: GET /api/v1/payment-orders/report\n?providerId={uuid}&startDate=2026-01-01&endDate=2026-12-31
 CONTROLLER -> USECASE: reportTotalPaid(providerId, startDate, endDate)
 USECASE -> PROV_REPO: findById(providerId)
 PROV_REPO --> USECASE: Provider
@@ -93,7 +93,7 @@ USECASE --> CONTROLLER: total
 CONTROLLER --> CLIENT: 200 + ReportResponse
 
 == Orders About to Expire ==
-CLIENT -> CONTROLLER: GET /api/payment-orders/about-to-expire?page=0&size=20
+CLIENT -> CONTROLLER: GET /api/v1/payment-orders/about-to-expire?page=0&size=20
 CONTROLLER -> USECASE: ordersAboutToExpire(0, 20)
 USECASE -> ORDER_REPO: findOrdersAboutToExpire(30 days, 0, 20)
 ORDER_REPO -> DB: SELECT * FROM payment_orders\nWHERE status='APPROVED'\nAND creation_date <= ?\nLIMIT 20 OFFSET 0
