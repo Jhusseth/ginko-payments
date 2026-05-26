@@ -15,15 +15,28 @@ public class StandardResponse<T> {
     }
 
     public static <T> StandardResponse<T> success(T data) {
+        return success(data, 200);
+    }
+
+    public static <T> StandardResponse<T> success(T data, int statusCode) {
         StandardResponse<T> response = new StandardResponse<>();
-        response.meta = new Meta();
+        Meta m = new Meta();
+        m.status = HttpStatus.valueOf(statusCode).getReasonPhrase();
+        m.statusCode = statusCode;
+        response.meta = m;
         response.data = data;
         return response;
     }
 
     public static <T> StandardResponse<List<T>> paged(List<T> data, long totalElements, int page, int size) {
+        return paged(data, totalElements, page, size, 200);
+    }
+
+    public static <T> StandardResponse<List<T>> paged(List<T> data, long totalElements, int page, int size, int statusCode) {
         StandardResponse<List<T>> response = new StandardResponse<>();
         Meta m = new Meta();
+        m.status = HttpStatus.valueOf(statusCode).getReasonPhrase();
+        m.statusCode = statusCode;
         m.totalElements = totalElements;
         m.page = page;
         m.size = size;
@@ -68,10 +81,6 @@ public class StandardResponse<T> {
             return statusCode;
         }
 
-        public Long getTotalElements() {
-            return totalElements;
-        }
-
         public Integer getPage() {
             return page;
         }
@@ -86,21 +95,6 @@ public class StandardResponse<T> {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public static class ErrorData {
-        private String code;
-        private String message;
-
-        public ErrorData(String code, String message) {
-            this.code = code;
-            this.message = message;
-        }
-
-        public String getCode() {
-            return code;
-        }
-
-        public String getMessage() {
-            return message;
-        }
+        public record ErrorData(String code, String message) {
     }
 }

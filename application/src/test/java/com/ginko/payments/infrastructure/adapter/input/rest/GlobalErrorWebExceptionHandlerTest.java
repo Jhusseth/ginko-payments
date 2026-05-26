@@ -48,7 +48,7 @@ class GlobalErrorWebExceptionHandlerTest {
         assertEquals(404, response.getStatusCode().value());
         assertNotNull(response.getBody());
         assertEquals(404, response.getBody().getMeta().getStatusCode());
-        assertEquals("PROVIDER_NOT_FOUND", response.getBody().getData().getCode());
+        assertEquals("PROVIDER_NOT_FOUND", response.getBody().getData().code());
     }
 
     @Test
@@ -58,7 +58,7 @@ class GlobalErrorWebExceptionHandlerTest {
         ResponseEntity<StandardResponse<StandardResponse.ErrorData>> response = handler.handleConflict(ex, createExchange()).block();
         assertNotNull(response);
         assertEquals(409, response.getStatusCode().value());
-        assertEquals("NIT_DUPLICATE", response.getBody().getData().getCode());
+        assertEquals("NIT_DUPLICATE", response.getBody().getData().code());
     }
 
     @Test
@@ -67,7 +67,7 @@ class GlobalErrorWebExceptionHandlerTest {
         ResponseEntity<StandardResponse<StandardResponse.ErrorData>> response = handler.handleBusiness(ex, createExchange()).block();
         assertNotNull(response);
         assertEquals(400, response.getStatusCode().value());
-        assertEquals("INACTIVE_PROVIDER", response.getBody().getData().getCode());
+        assertEquals("INACTIVE_PROVIDER", response.getBody().getData().code());
     }
 
     @Test
@@ -76,6 +76,6 @@ class GlobalErrorWebExceptionHandlerTest {
                 new RuntimeException("Unexpected"), createExchange()).block();
         assertNotNull(response);
         assertEquals(500, response.getStatusCode().value());
-        assertEquals("INTERNAL_ERROR", response.getBody().getData().getCode());
+        assertEquals("INTERNAL_ERROR", response.getBody().getData().code());
     }
 }

@@ -54,7 +54,7 @@ public class ProviderController {
     public Mono<ResponseEntity<StandardResponse<ProviderResponse>>> create(@Valid @RequestBody Mono<CreateProviderRequest> requestMono) {
         return requestMono
                 .flatMap(req -> useCase.create(req.getName(), req.getTaxIdentificationNumber(), req.getEmail()))
-                .map(p -> ResponseEntity.status(HttpStatus.CREATED).body(StandardResponse.success(ProviderResponse.fromDomain(p))));
+                .map(p -> ResponseEntity.status(HttpStatus.CREATED).body(StandardResponse.success(ProviderResponse.fromDomain(p), 201)));
     }
 
     @GetMapping

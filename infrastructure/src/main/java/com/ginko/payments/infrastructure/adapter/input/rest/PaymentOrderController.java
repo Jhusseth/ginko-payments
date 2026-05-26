@@ -65,7 +65,7 @@ public class PaymentOrderController {
         return requestMono
                 .flatMap(req -> useCase.create(req.getProviderId(), req.getAmount(),
                         req.getDescription(), idempotencyKey))
-                .map(o -> ResponseEntity.status(HttpStatus.CREATED).body(StandardResponse.success(PaymentOrderResponse.fromDomain(o))));
+                .map(o -> ResponseEntity.status(HttpStatus.CREATED).body(StandardResponse.success(PaymentOrderResponse.fromDomain(o), 201)));
     }
 
     @GetMapping

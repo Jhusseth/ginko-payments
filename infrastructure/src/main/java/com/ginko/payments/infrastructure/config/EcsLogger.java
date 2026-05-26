@@ -9,8 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -30,11 +28,10 @@ public class EcsLogger {
             Map<String, Object> error = new LinkedHashMap<>();
             error.put("code", errorCode.getTechnicalCode());
             error.put("business_code", errorCode.getBusinessCode());
-            error.put("description", message);
+            error.put("description", errorCode.getMessage());
             error.put("http_status", errorCode.getHttpStatus());
             if (cause != null) {
                 error.put("exception", cause.getClass().getName());
-                error.put("stack_trace", stackTraceToString(cause));
             }
             json.put("error", error);
 
@@ -60,12 +57,5 @@ public class EcsLogger {
         json.put("trace.id", traceId != null ? traceId : "N/A");
         json.put("service.name", "ginko-payments");
         return json;
-    }
-
-    private String stackTraceToString(Throwable cause) {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        cause.printStackTrace(pw);
-        return sw.toString();
     }
 }
