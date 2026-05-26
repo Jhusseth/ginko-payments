@@ -10,9 +10,10 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Repository
-public interface ReactivePaymentOrderRepository extends ReactiveCrudRepository<PaymentOrderEntity, Long> {
+public interface ReactivePaymentOrderRepository extends ReactiveCrudRepository<PaymentOrderEntity, UUID> {
 
     Mono<PaymentOrderEntity> findByIdempotencyKey(String key);
 
@@ -23,23 +24,23 @@ public interface ReactivePaymentOrderRepository extends ReactiveCrudRepository<P
     Flux<PaymentOrderEntity> findByStatusPaged(String status, int size, int offset);
 
     @Query("SELECT * FROM payment_orders WHERE provider_id = :providerId ORDER BY id LIMIT :size OFFSET :offset")
-    Flux<PaymentOrderEntity> findByProviderIdPaged(Long providerId, int size, int offset);
+    Flux<PaymentOrderEntity> findByProviderIdPaged(UUID providerId, int size, int offset);
 
     @Query("SELECT * FROM payment_orders WHERE status = :status AND provider_id = :providerId ORDER BY id LIMIT :size OFFSET :offset")
-    Flux<PaymentOrderEntity> findByStatusAndProviderIdPaged(String status, Long providerId, int size, int offset);
+    Flux<PaymentOrderEntity> findByStatusAndProviderIdPaged(String status, UUID providerId, int size, int offset);
 
     @Query("SELECT COUNT(*) FROM payment_orders WHERE status = :status")
     Mono<Long> countByStatus(String status);
 
     @Query("SELECT COUNT(*) FROM payment_orders WHERE provider_id = :providerId")
-    Mono<Long> countByProviderId(Long providerId);
+    Mono<Long> countByProviderId(UUID providerId);
 
     @Query("SELECT COUNT(*) FROM payment_orders WHERE status = :status AND provider_id = :providerId")
-    Mono<Long> countByStatusAndProviderId(String status, Long providerId);
+    Mono<Long> countByStatusAndProviderId(String status, UUID providerId);
 
     @Query("SELECT COALESCE(SUM(amount), 0) FROM payment_orders WHERE provider_id = :providerId " +
             "AND status = 'PAID' AND creation_date BETWEEN :start AND :end")
-    Mono<BigDecimal> totalPaidByProviderInRange(Long providerId, LocalDateTime start, LocalDateTime end);
+    Mono<BigDecimal> totalPaidByProviderInRange(UUID providerId, LocalDateTime start, LocalDateTime end);
 
     @Query("SELECT * FROM payment_orders WHERE status = 'APPROVED' " +
             "AND creation_date <= :limitDate ORDER BY id LIMIT :size OFFSET :offset")
@@ -52,5 +53,5 @@ public interface ReactivePaymentOrderRepository extends ReactiveCrudRepository<P
     @Modifying
     @Query("UPDATE payment_orders SET status = :status, version = version + 1 " +
             "WHERE id = :id AND version = :version")
-    Mono<Integer> updateStatusWithVersion(Long id, String status, Long version);
+    Mono<Integer> updateStatusWithVersion(UUID id, String status, Long version);
 }

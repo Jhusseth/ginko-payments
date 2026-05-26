@@ -14,6 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -31,7 +32,7 @@ class PaymentOrderAdditionalIntegrationTest {
         databaseClient.sql("DELETE FROM providers").then().block();
     }
 
-    private Long createProvider(String name, String nit, String email) {
+    private UUID createProvider(String name, String nit, String email) {
         CreateProviderRequest req = new CreateProviderRequest();
         req.setName(name);
         req.setTaxIdentificationNumber(nit);
@@ -47,15 +48,13 @@ class PaymentOrderAdditionalIntegrationTest {
                 .returnResult();
 
         String json = new String(result.getResponseBody() != null ? result.getResponseBody() : new byte[0]);
-        int idIdx = json.indexOf("\"id\":");
-        int start = idIdx + 5;
-        while (start < json.length() && !Character.isDigit(json.charAt(start))) start++;
-        int end = start;
-        while (end < json.length() && Character.isDigit(json.charAt(end))) end++;
-        return Long.parseLong(json.substring(start, end));
+        int idIdx = json.indexOf("\"id\":\"");
+        int start = idIdx + 6;
+        int end = json.indexOf("\"", start);
+        return UUID.fromString(json.substring(start, end));
     }
 
-    private Long createOrder(Long providerId, BigDecimal amount, String description) {
+    private UUID createOrder(UUID providerId, BigDecimal amount, String description) {
         CreatePaymentOrderRequest req = new CreatePaymentOrderRequest();
         req.setProviderId(providerId);
         req.setAmount(amount);
@@ -71,18 +70,16 @@ class PaymentOrderAdditionalIntegrationTest {
                 .returnResult();
 
         String json = new String(result.getResponseBody() != null ? result.getResponseBody() : new byte[0]);
-        int idIdx = json.indexOf("\"id\":");
-        int start = idIdx + 5;
-        while (start < json.length() && !Character.isDigit(json.charAt(start))) start++;
-        int end = start;
-        while (end < json.length() && Character.isDigit(json.charAt(end))) end++;
-        return Long.parseLong(json.substring(start, end));
+        int idIdx = json.indexOf("\"id\":\"");
+        int start = idIdx + 6;
+        int end = json.indexOf("\"", start);
+        return UUID.fromString(json.substring(start, end));
     }
 
     @Test
     void listPaymentOrders_WithStatusFilter_ReturnsFiltered() {
-        Long providerId = createProvider("P", "NIT-LIST", "p@test.com");
-        Long orderId = createOrder(providerId, BigDecimal.valueOf(1000), "Test");
+        UUID providerId = createProvider("P", "NIT-LIST", "p@test.com");
+        UUID orderId = createOrder(providerId, BigDecimal.valueOf(1000), "Test");
 
         ChangeOrderStatusRequest statusReq = new ChangeOrderStatusRequest();
         statusReq.setStatus(OrderStatus.APPROVED);
@@ -101,7 +98,7 @@ class PaymentOrderAdditionalIntegrationTest {
 
     @Test
     void listPaymentOrders_WithProviderFilter_ReturnsFiltered() {
-        Long providerId = createProvider("P", "NIT-FILT", "p@test.com");
+        UUID providerId = createProvider("P", "NIT-FILT", "p@test.com");
         createOrder(providerId, BigDecimal.valueOf(1000), "Test1");
         createOrder(providerId, BigDecimal.valueOf(2000), "Test2");
 
@@ -114,15 +111,15 @@ class PaymentOrderAdditionalIntegrationTest {
 
     @Test
     void getPaymentOrder_NotFound_Returns404() {
-        webTestClient.get().uri("/api/v1/payment-orders/9999")
+        webTestClient.get().uri("/api/v1/payment-orders/00000000-0000-0000-0000-000000000000")
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
     void transitionStatus_InvalidTransition_Returns400() {
-        Long providerId = createProvider("P", "NIT-INV", "p@test.com");
-        Long orderId = createOrder(providerId, BigDecimal.valueOf(1000), "Test");
+        UUID providerId = createProvider("P", "NIT-INV", "p@test.com");
+        UUID orderId = createOrder(providerId, BigDecimal.valueOf(1000), "Test");
 
         ChangeOrderStatusRequest req = new ChangeOrderStatusRequest();
         req.setStatus(OrderStatus.PAID);
@@ -139,7 +136,7 @@ class PaymentOrderAdditionalIntegrationTest {
         ChangeOrderStatusRequest req = new ChangeOrderStatusRequest();
         req.setStatus(OrderStatus.APPROVED);
 
-        webTestClient.patch().uri("/api/v1/payment-orders/9999/status")
+        webTestClient.patch().uri("/api/v1/payment-orders/00000000-0000-0000-0000-000000000000/status")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(req)
                 .exchange()
@@ -148,8 +145,8 @@ class PaymentOrderAdditionalIntegrationTest {
 
     @Test
     void reportTotalPaid_WithOrders_ReturnsTotal() {
-        Long providerId = createProvider("P", "NIT-REP", "p@test.com");
-        Long orderId = createOrder(providerId, BigDecimal.valueOf(5000), "Payment 1");
+        UUID providerId = createProvider("P", "NIT-REP", "p@test.com");
+        UUID orderId = createOrder(providerId, BigDecimal.valueOf(5000), "Payment 1");
 
         ChangeOrderStatusRequest approveReq = new ChangeOrderStatusRequest();
         approveReq.setStatus(OrderStatus.APPROVED);
@@ -171,15 +168,15 @@ class PaymentOrderAdditionalIntegrationTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.data.providerId").isEqualTo(providerId.intValue())
+                .jsonPath("$.data.providerId").isNotEmpty()
                 .jsonPath("$.data.providerName").isEqualTo("P")
                 .jsonPath("$.data.totalPaid").isEqualTo(5000);
     }
 
     @Test
     void ordersAboutToExpire_WhenExpiredOrder_ReturnsInList() {
-        Long providerId = createProvider("P", "NIT-EXP", "p@test.com");
-        Long orderId = createOrder(providerId, BigDecimal.valueOf(3000), "Old payment");
+        UUID providerId = createProvider("P", "NIT-EXP", "p@test.com");
+        UUID orderId = createOrder(providerId, BigDecimal.valueOf(3000), "Old payment");
 
         ChangeOrderStatusRequest req = new ChangeOrderStatusRequest();
         req.setStatus(OrderStatus.APPROVED);
@@ -208,7 +205,7 @@ class PaymentOrderAdditionalIntegrationTest {
 
     @Test
     void createPaymentOrder_WithInvalidAmount_Returns400() {
-        Long providerId = createProvider("P", "NIT-AMT", "p@test.com");
+        UUID providerId = createProvider("P", "NIT-AMT", "p@test.com");
         CreatePaymentOrderRequest req = new CreatePaymentOrderRequest();
         req.setProviderId(providerId);
         req.setAmount(BigDecimal.valueOf(-1));

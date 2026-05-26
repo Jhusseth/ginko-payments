@@ -34,6 +34,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/payment-orders")
@@ -74,7 +75,7 @@ public class PaymentOrderController {
     @Retry(name = "orderService")
     public Mono<ResponseEntity<StandardResponse<List<PaymentOrderResponse>>>> list(
             @RequestParam(required = false) OrderStatus status,
-            @RequestParam(required = false) Long providerId,
+            @RequestParam(required = false) UUID providerId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         if (page < 0) {
@@ -99,7 +100,7 @@ public class PaymentOrderController {
     })
     @CircuitBreaker(name = "orderService", fallbackMethod = "fallback")
     @Retry(name = "orderService")
-    public Mono<ResponseEntity<StandardResponse<PaymentOrderResponse>>> getById(@PathVariable Long id) {
+    public Mono<ResponseEntity<StandardResponse<PaymentOrderResponse>>> getById(@PathVariable UUID id) {
         return useCase.getById(id)
                 .map(o -> ResponseEntity.ok(StandardResponse.success(PaymentOrderResponse.fromDomain(o))));
     }
@@ -116,7 +117,7 @@ public class PaymentOrderController {
     @CircuitBreaker(name = "orderService", fallbackMethod = "fallback")
     @Retry(name = "orderService")
     public Mono<ResponseEntity<StandardResponse<PaymentOrderResponse>>> transitionStatus(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @Valid @RequestBody Mono<ChangeOrderStatusRequest> requestMono) {
         return requestMono
                 .flatMap(req -> useCase.transitionStatus(id, req.getStatus()))
@@ -128,7 +129,7 @@ public class PaymentOrderController {
     @CircuitBreaker(name = "orderService", fallbackMethod = "fallback")
     @Retry(name = "orderService")
     public Mono<ResponseEntity<StandardResponse<ReportResponse>>> paidReport(
-            @RequestParam Long providerId,
+            @RequestParam UUID providerId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         return useCase.reportTotalPaid(providerId, startDate, endDate)

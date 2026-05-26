@@ -9,7 +9,7 @@ skinparam packageStyle rectangle
 
 package "Database Schema (H2 via R2DBC)" {
   entity "providers" as PROVIDERS {
-    + id: BIGINT (PK)
+    + id: UUID (PK)
     --
     name: VARCHAR(255) NOT NULL
     tax_identification_number: VARCHAR(100) NOT NULL UNIQUE
@@ -18,9 +18,9 @@ package "Database Schema (H2 via R2DBC)" {
   }
 
   entity "payment_orders" as PAYMENT_ORDERS {
-    + id: BIGINT (PK)
+    + id: UUID (PK)
     --
-    provider_id: BIGINT NOT NULL (FK)
+    provider_id: UUID NOT NULL (FK)
     provider_name: VARCHAR(255) NOT NULL
     amount: DECIMAL(19,2) NOT NULL
     description: VARCHAR(500)

@@ -3,8 +3,10 @@ package com.ginko.payments.infrastructure.dto.response;
 import com.ginko.payments.domain.model.Provider;
 import com.ginko.payments.domain.model.enums.ProviderStatus;
 
+import java.util.UUID;
+
 public class ProviderResponse {
-    private Long id;
+    private UUID id;
     private String name;
     private String taxIdentificationNumber;
     private String email;
@@ -23,7 +25,7 @@ public class ProviderResponse {
         return r;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 

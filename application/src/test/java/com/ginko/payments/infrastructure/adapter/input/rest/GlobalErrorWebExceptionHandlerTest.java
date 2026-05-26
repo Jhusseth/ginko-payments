@@ -16,6 +16,8 @@ import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.web.server.ServerWebExchange;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -42,7 +44,7 @@ class GlobalErrorWebExceptionHandlerTest {
     @Test
     void handleNotFound_Returns404() {
         ResourceNotFoundException ex = new ResourceNotFoundException(
-                ErrorCode.PROVIDER_NOT_FOUND, "Provider", "id", 99L);
+                ErrorCode.PROVIDER_NOT_FOUND, "Provider", "id", UUID.fromString("00000000-0000-0000-0000-000000000063"));
         ResponseEntity<StandardResponse<StandardResponse.ErrorData>> response = handler.handleNotFound(ex, createExchange()).block();
         assertNotNull(response);
         assertEquals(404, response.getStatusCode().value());

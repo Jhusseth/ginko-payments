@@ -14,11 +14,16 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.UUID;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProviderUseCaseImplTest {
+
+    private static final UUID PROVIDER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID MISSING_ID = UUID.fromString("00000000-0000-0000-0000-000000000063");
 
     @Mock
     private ProviderRepositoryPort repository;
@@ -33,10 +38,10 @@ class ProviderUseCaseImplTest {
     @Test
     void create_WhenNitNotExists_ShouldSave() {
         when(repository.existsByTaxIdentificationNumber("NIT-001")).thenReturn(Mono.just(false));
-        when(repository.save(any())).thenReturn(Mono.just(new Provider(1L, "Test", "NIT-001", "e@e.com", ProviderStatus.ACTIVE)));
+        when(repository.save(any())).thenReturn(Mono.just(new Provider(PROVIDER_ID, "Test", "NIT-001", "e@e.com", ProviderStatus.ACTIVE)));
 
         StepVerifier.create(useCase.create("Test", "NIT-001", "e@e.com"))
-                .expectNextMatches(p -> p.getId() == 1L && p.getName().equals("Test"))
+                .expectNextMatches(p -> p.getId().equals(PROVIDER_ID) && p.getName().equals("Test"))
                 .verifyComplete();
     }
 
@@ -52,7 +57,7 @@ class ProviderUseCaseImplTest {
     @Test
     void list_WithoutStatus_ShouldReturnAll() {
         when(repository.findAll(0, 20)).thenReturn(Flux.just(
-                new Provider(1L, "P1", "N1", "e1@e.com", ProviderStatus.ACTIVE)));
+                new Provider(PROVIDER_ID, "P1", "N1", "e1@e.com", ProviderStatus.ACTIVE)));
 
         StepVerifier.create(useCase.list(null, 0, 20))
                 .expectNextCount(1)
@@ -62,7 +67,7 @@ class ProviderUseCaseImplTest {
     @Test
     void list_WithStatus_ShouldFilter() {
         when(repository.findByStatus(ProviderStatus.ACTIVE, 0, 20)).thenReturn(Flux.just(
-                new Provider(1L, "P1", "N1", "e1@e.com", ProviderStatus.ACTIVE)));
+                new Provider(PROVIDER_ID, "P1", "N1", "e1@e.com", ProviderStatus.ACTIVE)));
 
         StepVerifier.create(useCase.list(ProviderStatus.ACTIVE, 0, 20))
                 .expectNextCount(1)
@@ -71,53 +76,53 @@ class ProviderUseCaseImplTest {
 
     @Test
     void getById_WhenExists_ShouldReturn() {
-        when(repository.findById(1L)).thenReturn(Mono.just(
-                new Provider(1L, "Test", "NIT", "e@e.com", ProviderStatus.ACTIVE)));
+        when(repository.findById(PROVIDER_ID)).thenReturn(Mono.just(
+                new Provider(PROVIDER_ID, "Test", "NIT", "e@e.com", ProviderStatus.ACTIVE)));
 
-        StepVerifier.create(useCase.getById(1L))
-                .expectNextMatches(p -> p.getId() == 1L)
+        StepVerifier.create(useCase.getById(PROVIDER_ID))
+                .expectNextMatches(p -> p.getId().equals(PROVIDER_ID))
                 .verifyComplete();
     }
 
     @Test
     void getById_WhenNotExists_ShouldThrowNotFound() {
-        when(repository.findById(99L)).thenReturn(Mono.empty());
+        when(repository.findById(MISSING_ID)).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.getById(99L))
+        StepVerifier.create(useCase.getById(MISSING_ID))
                 .expectError(ResourceNotFoundException.class)
                 .verify();
     }
 
     @Test
     void update_WhenExistsAndNitUnique_ShouldUpdate() {
-        Provider existing = new Provider(1L, "Old", "NIT", "old@e.com", ProviderStatus.ACTIVE);
-        when(repository.findById(1L)).thenReturn(Mono.just(existing));
+        Provider existing = new Provider(PROVIDER_ID, "Old", "NIT", "old@e.com", ProviderStatus.ACTIVE);
+        when(repository.findById(PROVIDER_ID)).thenReturn(Mono.just(existing));
         when(repository.findByTaxIdentificationNumber("NIT-NEW")).thenReturn(Mono.empty());
         when(repository.save(any())).thenReturn(Mono.just(
-                new Provider(1L, "New", "NIT-NEW", "new@e.com", ProviderStatus.ACTIVE)));
+                new Provider(PROVIDER_ID, "New", "NIT-NEW", "new@e.com", ProviderStatus.ACTIVE)));
 
-        StepVerifier.create(useCase.update(1L, "New", "NIT-NEW", "new@e.com"))
+        StepVerifier.create(useCase.update(PROVIDER_ID, "New", "NIT-NEW", "new@e.com"))
                 .expectNextMatches(p -> p.getName().equals("New"))
                 .verifyComplete();
     }
 
     @Test
     void update_WhenNotExists_ShouldThrowNotFound() {
-        when(repository.findById(99L)).thenReturn(Mono.empty());
+        when(repository.findById(MISSING_ID)).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.update(99L, "New", "NIT", "e@e.com"))
+        StepVerifier.create(useCase.update(MISSING_ID, "New", "NIT", "e@e.com"))
                 .expectError(ResourceNotFoundException.class)
                 .verify();
     }
 
     @Test
     void changeStatus_ShouldUpdate() {
-        Provider existing = new Provider(1L, "Test", "NIT", "e@e.com", ProviderStatus.ACTIVE);
-        when(repository.findById(1L)).thenReturn(Mono.just(existing));
+        Provider existing = new Provider(PROVIDER_ID, "Test", "NIT", "e@e.com", ProviderStatus.ACTIVE);
+        when(repository.findById(PROVIDER_ID)).thenReturn(Mono.just(existing));
         when(repository.save(any())).thenReturn(Mono.just(
-                new Provider(1L, "Test", "NIT", "e@e.com", ProviderStatus.INACTIVE)));
+                new Provider(PROVIDER_ID, "Test", "NIT", "e@e.com", ProviderStatus.INACTIVE)));
 
-        StepVerifier.create(useCase.changeStatus(1L, ProviderStatus.INACTIVE))
+        StepVerifier.create(useCase.changeStatus(PROVIDER_ID, ProviderStatus.INACTIVE))
                 .expectNextMatches(p -> p.getStatus() == ProviderStatus.INACTIVE)
                 .verifyComplete();
     }

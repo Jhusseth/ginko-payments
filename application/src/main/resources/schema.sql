@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS providers
 (
-    id                        BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id                        UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
     name                      VARCHAR(255) NOT NULL,
     tax_identification_number VARCHAR(100) NOT NULL UNIQUE,
     email                     VARCHAR(255) NOT NULL,
@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS providers
 
 CREATE TABLE IF NOT EXISTS payment_orders
 (
-    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
-    provider_id     BIGINT         NOT NULL,
+    id              UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
+    provider_id     UUID           NOT NULL,
     provider_name   VARCHAR(255)   NOT NULL,
     amount          DECIMAL(19, 2) NOT NULL,
     description     VARCHAR(500),

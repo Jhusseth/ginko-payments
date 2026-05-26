@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/providers")
@@ -87,7 +88,7 @@ public class ProviderController {
     })
     @CircuitBreaker(name = "providerService", fallbackMethod = "fallback")
     @Retry(name = "providerService")
-    public Mono<ResponseEntity<StandardResponse<ProviderResponse>>> getById(@PathVariable Long id) {
+    public Mono<ResponseEntity<StandardResponse<ProviderResponse>>> getById(@PathVariable UUID id) {
         return useCase.getById(id)
                 .map(p -> ResponseEntity.ok(StandardResponse.success(ProviderResponse.fromDomain(p))));
     }
@@ -102,7 +103,7 @@ public class ProviderController {
     @CircuitBreaker(name = "providerService", fallbackMethod = "fallback")
     @Retry(name = "providerService")
     public Mono<ResponseEntity<StandardResponse<ProviderResponse>>> update(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @Valid @RequestBody Mono<UpdateProviderRequest> requestMono) {
         return requestMono
                 .flatMap(req -> useCase.update(id, req.getName(),
@@ -119,7 +120,7 @@ public class ProviderController {
     @CircuitBreaker(name = "providerService", fallbackMethod = "fallback")
     @Retry(name = "providerService")
     public Mono<ResponseEntity<StandardResponse<ProviderResponse>>> changeStatus(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @Valid @RequestBody Mono<ChangeProviderStatusRequest> requestMono) {
         return requestMono
                 .flatMap(req -> useCase.changeStatus(id, req.getStatus()))

@@ -7,8 +7,10 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @Repository
-public interface ReactiveProviderRepository extends ReactiveCrudRepository<ProviderEntity, Long> {
+public interface ReactiveProviderRepository extends ReactiveCrudRepository<ProviderEntity, UUID> {
     Mono<Boolean> existsByTaxIdentificationNumber(String nit);
 
     Mono<ProviderEntity> findByTaxIdentificationNumber(String nit);

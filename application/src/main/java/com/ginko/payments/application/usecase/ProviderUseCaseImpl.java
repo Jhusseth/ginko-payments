@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @Service
 public class ProviderUseCaseImpl implements ProviderUseCase {
 
@@ -49,14 +51,14 @@ public class ProviderUseCaseImpl implements ProviderUseCase {
     }
 
     @Override
-    public Mono<Provider> getById(Long id) {
+    public Mono<Provider> getById(UUID id) {
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException(
                         ErrorCode.PROVIDER_NOT_FOUND, "Provider", "id", id)));
     }
 
     @Override
-    public Mono<Provider> update(Long id, String name, String nit, String email) {
+    public Mono<Provider> update(UUID id, String name, String nit, String email) {
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException(
                         ErrorCode.PROVIDER_NOT_FOUND, "Provider", "id", id)))
@@ -73,7 +75,7 @@ public class ProviderUseCaseImpl implements ProviderUseCase {
     }
 
     @Override
-    public Mono<Provider> changeStatus(Long id, ProviderStatus newStatus) {
+    public Mono<Provider> changeStatus(UUID id, ProviderStatus newStatus) {
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException(
                         ErrorCode.PROVIDER_NOT_FOUND, "Provider", "id", id)))

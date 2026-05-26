@@ -19,6 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -37,7 +38,7 @@ class PaymentOrderReactiveIntegrationTest {
         databaseClient.sql("DELETE FROM providers").then().block();
     }
 
-    private Long createProvider(String name, String nit, String email) {
+    private UUID createProvider(String name, String nit, String email) {
         CreateProviderRequest req = new CreateProviderRequest();
         req.setName(name);
         req.setTaxIdentificationNumber(nit);
@@ -57,11 +58,11 @@ class PaymentOrderReactiveIntegrationTest {
         return extractId(json);
     }
 
-    private Long createOrder(Long providerId, BigDecimal amount, String description) {
+    private UUID createOrder(UUID providerId, BigDecimal amount, String description) {
         return createOrder(providerId, amount, description, null);
     }
 
-    private Long createOrder(Long providerId, BigDecimal amount, String description, String idempotencyKey) {
+    private UUID createOrder(UUID providerId, BigDecimal amount, String description, String idempotencyKey) {
         CreatePaymentOrderRequest req = new CreatePaymentOrderRequest();
         req.setProviderId(providerId);
         req.setAmount(amount);
@@ -84,23 +85,21 @@ class PaymentOrderReactiveIntegrationTest {
         return extractId(json);
     }
 
-    private Long extractId(String json) {
-        int idIdx = json.indexOf("\"id\":");
-        if (idIdx < 0) return -1L;
-        int start = idIdx + 5;
-        while (start < json.length() && !Character.isDigit(json.charAt(start))) start++;
-        int end = start;
-        while (end < json.length() && Character.isDigit(json.charAt(end))) end++;
+    private UUID extractId(String json) {
+        int idIdx = json.indexOf("\"id\":\"");
+        if (idIdx < 0) return null;
+        int start = idIdx + 6;
+        int end = json.indexOf("\"", start);
         try {
-            return Long.parseLong(json.substring(start, end));
-        } catch (NumberFormatException e) {
-            return -1L;
+            return UUID.fromString(json.substring(start, end));
+        } catch (Exception e) {
+            return null;
         }
     }
 
     @Test
     void completeCycle_ProviderAndOrder_SuccessfulFlow() {
-        Long providerId = createProvider("Provider ABC SAS", "900123456-7", "contact@abc.com");
+        UUID providerId = createProvider("Provider ABC SAS", "900123456-7", "contact@abc.com");
 
         webTestClient.get().uri("/api/v1/providers")
                 .exchange()
@@ -145,7 +144,7 @@ class PaymentOrderReactiveIntegrationTest {
                 .exchange()
                 .expectStatus().isOk();
 
-        Long orderId = createOrder(providerId, new BigDecimal("2500000"), "Payment services");
+        UUID orderId = createOrder(providerId, new BigDecimal("2500000"), "Payment services");
 
         webTestClient.get().uri("/api/v1/payment-orders/{id}", orderId)
                 .exchange()
@@ -173,7 +172,7 @@ class PaymentOrderReactiveIntegrationTest {
 
     @Test
     void createOrder_WithInactiveProvider_Returns400() {
-        Long providerId = createProvider("Inactive Provider", "NIT-INACTIVE", "i@test.com");
+        UUID providerId = createProvider("Inactive Provider", "NIT-INACTIVE", "i@test.com");
 
         ChangeProviderStatusRequest statusReq = new ChangeProviderStatusRequest();
         statusReq.setStatus(ProviderStatus.INACTIVE);
@@ -198,7 +197,7 @@ class PaymentOrderReactiveIntegrationTest {
     @Test
     void createOrder_WithNonExistentProvider_Returns404() {
         CreatePaymentOrderRequest req = new CreatePaymentOrderRequest();
-        req.setProviderId(9999L);
+        req.setProviderId(UUID.fromString("00000000-0000-0000-0000-000000000000"));
         req.setAmount(new BigDecimal("500000"));
         req.setDescription("Test payment");
 
@@ -211,9 +210,9 @@ class PaymentOrderReactiveIntegrationTest {
 
     @Test
     void transitionStatus_CompleteFlow_Successful() {
-        Long providerId = createProvider("Test Provider", "NIT-TRANS", "trans@test.com");
+        UUID providerId = createProvider("Test Provider", "NIT-TRANS", "trans@test.com");
 
-        Long orderId = createOrder(providerId, new BigDecimal("1000000"), "Test transitions");
+        UUID orderId = createOrder(providerId, new BigDecimal("1000000"), "Test transitions");
 
         ChangeOrderStatusRequest statusOrderReq = new ChangeOrderStatusRequest();
         statusOrderReq.setStatus(OrderStatus.APPROVED);
@@ -238,7 +237,7 @@ class PaymentOrderReactiveIntegrationTest {
 
     @Test
     void idempotencyKey_PreventsDuplicates() {
-        Long providerId = createProvider("Provider Idempotency", "NIT-IDEM", "idem@test.com");
+        UUID providerId = createProvider("Provider Idempotency", "NIT-IDEM", "idem@test.com");
 
         CreatePaymentOrderRequest req = new CreatePaymentOrderRequest();
         req.setProviderId(providerId);

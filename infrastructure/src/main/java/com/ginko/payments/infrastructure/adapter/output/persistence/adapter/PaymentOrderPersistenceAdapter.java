@@ -11,6 +11,7 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Component
 public class PaymentOrderPersistenceAdapter implements PaymentOrderRepositoryPort {
@@ -27,7 +28,7 @@ public class PaymentOrderPersistenceAdapter implements PaymentOrderRepositoryPor
     }
 
     @Override
-    public Mono<PaymentOrder> findById(Long id) {
+    public Mono<PaymentOrder> findById(UUID id) {
         return repository.findById(id).map(this::toDomain);
     }
 
@@ -47,12 +48,12 @@ public class PaymentOrderPersistenceAdapter implements PaymentOrderRepositoryPor
     }
 
     @Override
-    public Flux<PaymentOrder> findByProviderId(Long providerId, int page, int size) {
+    public Flux<PaymentOrder> findByProviderId(UUID providerId, int page, int size) {
         return repository.findByProviderIdPaged(providerId, size, page * size).map(this::toDomain);
     }
 
     @Override
-    public Flux<PaymentOrder> findByStatusAndProviderId(OrderStatus status, Long providerId, int page, int size) {
+    public Flux<PaymentOrder> findByStatusAndProviderId(OrderStatus status, UUID providerId, int page, int size) {
         return repository.findByStatusAndProviderIdPaged(status.name(), providerId, size, page * size)
                 .map(this::toDomain);
     }
@@ -68,17 +69,17 @@ public class PaymentOrderPersistenceAdapter implements PaymentOrderRepositoryPor
     }
 
     @Override
-    public Mono<Long> countByProviderId(Long providerId) {
+    public Mono<Long> countByProviderId(UUID providerId) {
         return repository.countByProviderId(providerId);
     }
 
     @Override
-    public Mono<Long> countByStatusAndProviderId(OrderStatus status, Long providerId) {
+    public Mono<Long> countByStatusAndProviderId(OrderStatus status, UUID providerId) {
         return repository.countByStatusAndProviderId(status.name(), providerId);
     }
 
     @Override
-    public Mono<BigDecimal> totalPaidByProviderInRange(Long providerId, LocalDateTime start, LocalDateTime end) {
+    public Mono<BigDecimal> totalPaidByProviderInRange(UUID providerId, LocalDateTime start, LocalDateTime end) {
         return repository.totalPaidByProviderInRange(providerId, start, end);
     }
 
@@ -95,7 +96,7 @@ public class PaymentOrderPersistenceAdapter implements PaymentOrderRepositoryPor
     }
 
     @Override
-    public Mono<Boolean> updateStatusWithVersion(Long id, OrderStatus newStatus, Long version) {
+    public Mono<Boolean> updateStatusWithVersion(UUID id, OrderStatus newStatus, Long version) {
         return repository.updateStatusWithVersion(id, newStatus.name(), version)
                 .map(updated -> updated > 0);
     }

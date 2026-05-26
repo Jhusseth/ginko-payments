@@ -1,9 +1,10 @@
 package com.ginko.payments.infrastructure.dto.response;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 public class ReportResponse {
-    private Long providerId;
+    private UUID providerId;
     private String providerName;
     private BigDecimal totalPaid;
     private String startDate;
@@ -12,7 +13,7 @@ public class ReportResponse {
     public ReportResponse() {
     }
 
-    public ReportResponse(Long providerId, String providerName, BigDecimal totalPaid,
+    public ReportResponse(UUID providerId, String providerName, BigDecimal totalPaid,
                           String startDate, String endDate) {
         this.providerId = providerId;
         this.providerName = providerName;
@@ -21,7 +22,7 @@ public class ReportResponse {
         this.endDate = endDate;
     }
 
-    public Long getProviderId() {
+    public UUID getProviderId() {
         return providerId;
     }
 

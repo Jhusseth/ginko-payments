@@ -5,6 +5,8 @@ import com.ginko.payments.domain.model.enums.ProviderStatus;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 public interface ProviderUseCase {
     Mono<Provider> create(String name, String nit, String email);
 
@@ -12,9 +14,9 @@ public interface ProviderUseCase {
 
     Mono<Long> count(ProviderStatus status);
 
-    Mono<Provider> getById(Long id);
+    Mono<Provider> getById(UUID id);
 
-    Mono<Provider> update(Long id, String name, String nit, String email);
+    Mono<Provider> update(UUID id, String name, String nit, String email);
 
-    Mono<Provider> changeStatus(Long id, ProviderStatus newStatus);
+    Mono<Provider> changeStatus(UUID id, ProviderStatus newStatus);
 }

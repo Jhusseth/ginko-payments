@@ -5,10 +5,11 @@ import com.ginko.payments.domain.model.enums.OrderStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class PaymentOrderResponse {
-    private Long id;
-    private Long providerId;
+    private UUID id;
+    private UUID providerId;
     private String providerName;
     private BigDecimal amount;
     private String description;
@@ -32,11 +33,11 @@ public class PaymentOrderResponse {
         return r;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public Long getProviderId() {
+    public UUID getProviderId() {
         return providerId;
     }
 

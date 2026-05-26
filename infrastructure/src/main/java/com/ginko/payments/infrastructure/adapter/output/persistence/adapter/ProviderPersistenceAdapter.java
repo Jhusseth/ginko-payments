@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @Component
 public class ProviderPersistenceAdapter implements ProviderRepositoryPort {
 
@@ -25,7 +27,7 @@ public class ProviderPersistenceAdapter implements ProviderRepositoryPort {
     }
 
     @Override
-    public Mono<Provider> findById(Long id) {
+    public Mono<Provider> findById(UUID id) {
         return repository.findById(id).map(this::toDomain);
     }
 

@@ -7,19 +7,20 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
 public interface PaymentOrderUseCase {
-    Mono<PaymentOrder> create(Long providerId, BigDecimal amount, String description, String idempotencyKey);
+    Mono<PaymentOrder> create(UUID providerId, BigDecimal amount, String description, String idempotencyKey);
 
-    Flux<PaymentOrder> list(OrderStatus status, Long providerId, int page, int size);
+    Flux<PaymentOrder> list(OrderStatus status, UUID providerId, int page, int size);
 
-    Mono<Long> count(OrderStatus status, Long providerId);
+    Mono<Long> count(OrderStatus status, UUID providerId);
 
-    Mono<PaymentOrder> getById(Long id);
+    Mono<PaymentOrder> getById(UUID id);
 
-    Mono<PaymentOrder> transitionStatus(Long id, OrderStatus newStatus);
+    Mono<PaymentOrder> transitionStatus(UUID id, OrderStatus newStatus);
 
-    Mono<BigDecimal> reportTotalPaid(Long providerId, LocalDate startDate, LocalDate endDate);
+    Mono<BigDecimal> reportTotalPaid(UUID providerId, LocalDate startDate, LocalDate endDate);
 
     Flux<PaymentOrder> ordersAboutToExpire(int page, int size);
 

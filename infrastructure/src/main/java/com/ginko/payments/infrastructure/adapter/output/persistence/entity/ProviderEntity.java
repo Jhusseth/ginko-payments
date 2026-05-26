@@ -4,10 +4,12 @@ import com.ginko.payments.domain.model.enums.ProviderStatus;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.util.UUID;
+
 @Table("providers")
 public class ProviderEntity {
     @Id
-    private Long id;
+    private UUID id;
     private String name;
     private String taxIdentificationNumber;
     private String email;
@@ -16,7 +18,7 @@ public class ProviderEntity {
     public ProviderEntity() {
     }
 
-    public ProviderEntity(Long id, String name, String taxIdentificationNumber,
+    public ProviderEntity(UUID id, String name, String taxIdentificationNumber,
                           String email, ProviderStatus status) {
         this.id = id;
         this.name = name;
@@ -25,11 +27,11 @@ public class ProviderEntity {
         this.status = status;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

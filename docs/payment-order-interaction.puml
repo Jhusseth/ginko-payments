@@ -82,12 +82,12 @@ else Order found
 end
 
 == Report Total Paid ==
-CLIENT -> CONTROLLER: GET /api/payment-orders/report\n?providerId=1&startDate=2026-01-01&endDate=2026-12-31
-CONTROLLER -> USECASE: reportTotalPaid(1, startDate, endDate)
-USECASE -> PROV_REPO: findById(1)
+CLIENT -> CONTROLLER: GET /api/payment-orders/report\n?providerId={uuid}&startDate=2026-01-01&endDate=2026-12-31
+CONTROLLER -> USECASE: reportTotalPaid(providerId, startDate, endDate)
+USECASE -> PROV_REPO: findById(providerId)
 PROV_REPO --> USECASE: Provider
-USECASE -> ORDER_REPO: totalPaidByProviderInRange(1, start, end)
-ORDER_REPO -> DB: SELECT COALESCE(SUM(amount),0)\nFROM payment_orders\nWHERE provider_id=1 AND status='PAID'\nAND creation_date BETWEEN ? AND ?
+USECASE -> ORDER_REPO: totalPaidByProviderInRange(providerId, start, end)
+ORDER_REPO -> DB: SELECT COALESCE(SUM(amount),0)\nFROM payment_orders\nWHERE provider_id = ? AND status='PAID'\nAND creation_date BETWEEN ? AND ?
 DB --> ORDER_REPO: BigDecimal
 ORDER_REPO --> USECASE: total
 USECASE --> CONTROLLER: total

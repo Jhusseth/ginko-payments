@@ -13,6 +13,8 @@ import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import java.util.UUID;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 class ProviderControllerIntegrationTest {
@@ -29,7 +31,7 @@ class ProviderControllerIntegrationTest {
         databaseClient.sql("DELETE FROM providers").then().block();
     }
 
-    private Long createProvider(String name, String nit, String email) {
+    private UUID createProvider(String name, String nit, String email) {
         CreateProviderRequest req = new CreateProviderRequest();
         req.setName(name);
         req.setTaxIdentificationNumber(nit);
@@ -45,12 +47,10 @@ class ProviderControllerIntegrationTest {
                 .returnResult();
 
         String json = new String(result.getResponseBody() != null ? result.getResponseBody() : new byte[0]);
-        int idIdx = json.indexOf("\"id\":");
-        int start = idIdx + 5;
-        while (start < json.length() && !Character.isDigit(json.charAt(start))) start++;
-        int end = start;
-        while (end < json.length() && Character.isDigit(json.charAt(end))) end++;
-        return Long.parseLong(json.substring(start, end));
+        int idIdx = json.indexOf("\"id\":\"");
+        int start = idIdx + 6;
+        int end = json.indexOf("\"", start);
+        return UUID.fromString(json.substring(start, end));
     }
 
     @Test
@@ -68,7 +68,7 @@ class ProviderControllerIntegrationTest {
 
     @Test
     void listProviders_WithStatusFilter_ReturnsFiltered() {
-        Long id = createProvider("P1", "NIT-FILTER", "p1@test.com");
+        UUID id = createProvider("P1", "NIT-FILTER", "p1@test.com");
         ChangeProviderStatusRequest statusReq = new ChangeProviderStatusRequest();
         statusReq.setStatus(ProviderStatus.INACTIVE);
         webTestClient.patch().uri("/api/v1/providers/{id}/status", id)
@@ -86,7 +86,7 @@ class ProviderControllerIntegrationTest {
 
     @Test
     void getProvider_NotFound_Returns404() {
-        webTestClient.get().uri("/api/v1/providers/9999")
+        webTestClient.get().uri("/api/v1/providers/00000000-0000-0000-0000-000000000000")
                 .exchange()
                 .expectStatus().isNotFound()
                 .expectBody()
@@ -96,7 +96,7 @@ class ProviderControllerIntegrationTest {
     @Test
     void updateProvider_WithDuplicateNit_Returns409() {
         createProvider("P1", "NIT-UNIQUE", "p1@test.com");
-        Long p2Id = createProvider("P2", "NIT-OTHER", "p2@test.com");
+        UUID p2Id = createProvider("P2", "NIT-OTHER", "p2@test.com");
 
         UpdateProviderRequest req = new UpdateProviderRequest();
         req.setName("P2 Updated");
@@ -115,7 +115,7 @@ class ProviderControllerIntegrationTest {
         ChangeProviderStatusRequest req = new ChangeProviderStatusRequest();
         req.setStatus(ProviderStatus.INACTIVE);
 
-        webTestClient.patch().uri("/api/v1/providers/9999/status")
+        webTestClient.patch().uri("/api/v1/providers/00000000-0000-0000-0000-000000000000/status")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(req)
                 .exchange()

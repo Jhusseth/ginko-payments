@@ -7,12 +7,13 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Table("payment_orders")
 public class PaymentOrderEntity {
     @Id
-    private Long id;
-    private Long providerId;
+    private UUID id;
+    private UUID providerId;
     private String providerName;
     private BigDecimal amount;
     private String description;
@@ -26,19 +27,19 @@ public class PaymentOrderEntity {
     public PaymentOrderEntity() {
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
-    public Long getProviderId() {
+    public UUID getProviderId() {
         return providerId;
     }
 
-    public void setProviderId(Long v) {
+    public void setProviderId(UUID v) {
         this.providerId = v;
     }
 

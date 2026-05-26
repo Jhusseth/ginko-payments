@@ -2,9 +2,11 @@ package com.ginko.payments.domain.model;
 
 import com.ginko.payments.domain.model.enums.ProviderStatus;
 
+import java.util.UUID;
+
 public class Provider {
 
-    private final Long id;
+    private final UUID id;
     private final String name;
     private final String taxIdentificationNumber;
     private final String email;
@@ -14,7 +16,7 @@ public class Provider {
         this(null, name, taxIdentificationNumber, email, ProviderStatus.ACTIVE);
     }
 
-    public Provider(Long id, String name, String taxIdentificationNumber,
+    public Provider(UUID id, String name, String taxIdentificationNumber,
                     String email, ProviderStatus status) {
         this.id = id;
         this.name = name;
@@ -23,7 +25,7 @@ public class Provider {
         this.status = status;
     }
 
-    public Provider withId(Long id) {
+    public Provider withId(UUID id) {
         return new Provider(id, this.name, this.taxIdentificationNumber, this.email, this.status);
     }
 
@@ -39,7 +41,7 @@ public class Provider {
         return ProviderStatus.ACTIVE.equals(this.status);
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 

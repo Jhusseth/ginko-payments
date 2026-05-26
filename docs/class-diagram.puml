@@ -9,7 +9,7 @@ skinparam packageBorderColor #0066cc
 
 package "Domain Model" {
   class Provider {
-    - id: Long
+    - id: UUID
     - name: String
     - taxIdentificationNumber: String
     - email: String
@@ -20,7 +20,7 @@ package "Domain Model" {
     + withStatus(newStatus): Provider
     + withUpdatedData(name, nit, email): Provider
     + isActive(): boolean
-    + getId(): Long
+    + getId(): UUID
     + getName(): String
     + getTaxIdentificationNumber(): String
     + getEmail(): String
@@ -28,8 +28,8 @@ package "Domain Model" {
   }
 
   class PaymentOrder {
-    - id: Long
-    - providerId: Long
+    - id: UUID
+    - providerId: UUID
     - providerName: String
     - amount: BigDecimal
     - description: String
@@ -44,8 +44,8 @@ package "Domain Model" {
     + withVersion(version): PaymentOrder
     + withIdempotencyKey(key): PaymentOrder
     + isAboutToExpire(limitDays): boolean
-    + getId(): Long
-    + getProviderId(): Long
+    + getId(): UUID
+    + getProviderId(): UUID
     + getProviderName(): String
     + getAmount(): BigDecimal
     + getDescription(): String

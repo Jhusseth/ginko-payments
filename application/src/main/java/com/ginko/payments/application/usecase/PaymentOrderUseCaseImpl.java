@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.UUID;
 
 @Service
 public class PaymentOrderUseCaseImpl implements PaymentOrderUseCase {
@@ -31,7 +32,7 @@ public class PaymentOrderUseCaseImpl implements PaymentOrderUseCase {
     }
 
     @Override
-    public Mono<PaymentOrder> create(Long providerId, BigDecimal amount, String description, String idempotencyKey) {
+    public Mono<PaymentOrder> create(UUID providerId, BigDecimal amount, String description, String idempotencyKey) {
         if (idempotencyKey != null) {
             return paymentOrderRepository.findByIdempotencyKey(idempotencyKey)
                     .flatMap(Mono::just)
@@ -41,7 +42,7 @@ public class PaymentOrderUseCaseImpl implements PaymentOrderUseCase {
         return createNewOrder(providerId, amount, description, null);
     }
 
-    private Mono<PaymentOrder> createNewOrder(Long providerId, BigDecimal amount,
+    private Mono<PaymentOrder> createNewOrder(UUID providerId, BigDecimal amount,
                                               String description, String idempotencyKey) {
         return providerRepository.findById(providerId)
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException(
@@ -60,7 +61,7 @@ public class PaymentOrderUseCaseImpl implements PaymentOrderUseCase {
     }
 
     @Override
-    public Flux<PaymentOrder> list(OrderStatus status, Long providerId, int page, int size) {
+    public Flux<PaymentOrder> list(OrderStatus status, UUID providerId, int page, int size) {
         if (status != null && providerId != null) {
             return paymentOrderRepository.findByStatusAndProviderId(status, providerId, page, size);
         } else if (status != null) {
@@ -72,7 +73,7 @@ public class PaymentOrderUseCaseImpl implements PaymentOrderUseCase {
     }
 
     @Override
-    public Mono<Long> count(OrderStatus status, Long providerId) {
+    public Mono<Long> count(OrderStatus status, UUID providerId) {
         if (status != null && providerId != null) {
             return paymentOrderRepository.countByStatusAndProviderId(status, providerId);
         } else if (status != null) {
@@ -84,14 +85,14 @@ public class PaymentOrderUseCaseImpl implements PaymentOrderUseCase {
     }
 
     @Override
-    public Mono<PaymentOrder> getById(Long id) {
+    public Mono<PaymentOrder> getById(UUID id) {
         return paymentOrderRepository.findById(id)
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException(
                         ErrorCode.ORDER_NOT_FOUND, "Payment order", "id", id)));
     }
 
     @Override
-    public Mono<PaymentOrder> transitionStatus(Long id, OrderStatus newStatus) {
+    public Mono<PaymentOrder> transitionStatus(UUID id, OrderStatus newStatus) {
         return paymentOrderRepository.findById(id)
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException(
                         ErrorCode.ORDER_NOT_FOUND, "Payment order", "id", id)))
@@ -116,7 +117,7 @@ public class PaymentOrderUseCaseImpl implements PaymentOrderUseCase {
     }
 
     @Override
-    public Mono<BigDecimal> reportTotalPaid(Long providerId, LocalDate startDate, LocalDate endDate) {
+    public Mono<BigDecimal> reportTotalPaid(UUID providerId, LocalDate startDate, LocalDate endDate) {
         return providerRepository.findById(providerId)
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException(
                         ErrorCode.PROVIDER_NOT_FOUND, "Provider", "id", providerId)))

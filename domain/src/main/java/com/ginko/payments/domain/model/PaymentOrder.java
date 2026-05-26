@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 public class PaymentOrder {
 
@@ -14,8 +15,8 @@ public class PaymentOrder {
             OrderStatus.APPROVED, Set.of(OrderStatus.PAID)
     );
 
-    private final Long id;
-    private final Long providerId;
+    private final UUID id;
+    private final UUID providerId;
     private final String providerName;
     private final BigDecimal amount;
     private final String description;
@@ -25,12 +26,12 @@ public class PaymentOrder {
     private final Long version;
     private final String idempotencyKey;
 
-    public PaymentOrder(Long providerId, String providerName, BigDecimal amount, String description) {
+    public PaymentOrder(UUID providerId, String providerName, BigDecimal amount, String description) {
         this(null, providerId, providerName, amount, description,
                 LocalDateTime.now(), null, OrderStatus.DRAFT, null, null);
     }
 
-    public PaymentOrder(Long id, Long providerId, String providerName, BigDecimal amount,
+    public PaymentOrder(UUID id, UUID providerId, String providerName, BigDecimal amount,
                         String description, LocalDateTime creationDate, LocalDateTime updateDate,
                         OrderStatus status, Long version, String idempotencyKey) {
         this.id = id;
@@ -57,7 +58,7 @@ public class PaymentOrder {
                 this.description, this.creationDate, LocalDateTime.now(), newStatus, this.version, this.idempotencyKey);
     }
 
-    public PaymentOrder withId(Long id) {
+    public PaymentOrder withId(UUID id) {
         return new PaymentOrder(id, this.providerId, this.providerName, this.amount,
                 this.description, this.creationDate, this.updateDate, this.status, this.version, this.idempotencyKey);
     }
@@ -77,11 +78,11 @@ public class PaymentOrder {
                 && this.creationDate.isBefore(LocalDateTime.now().minusDays(limitDays));
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public Long getProviderId() {
+    public UUID getProviderId() {
         return providerId;
     }
 

@@ -5,10 +5,12 @@ import com.ginko.payments.domain.model.enums.ProviderStatus;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 public interface ProviderRepositoryPort {
     Mono<Provider> save(Provider provider);
 
-    Mono<Provider> findById(Long id);
+    Mono<Provider> findById(UUID id);
 
     Mono<Provider> findByTaxIdentificationNumber(String nit);
 
