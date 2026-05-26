@@ -1,6 +1,6 @@
 @startuml
 !theme plain
-skinparam backgroundColor transparent
+skinparam backgroundColor white
 skinparam actorBorderColor #0066cc
 skinparam participantBorderColor #0066cc
 skinparam arrowColor #333333
