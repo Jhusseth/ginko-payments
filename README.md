@@ -40,14 +40,6 @@ The application starts at `http://localhost:8080`.
 
 Import `docs/ginko-payments.postman_collection.json` into Postman to test all endpoints with predefined examples.
 
-## H2 Console
-
-http://localhost:8080/h2-console
-
-- JDBC URL: `jdbc:h2:mem:ginkopayments` (JDBC, not R2DBC)
-- User: `sa`
-- Password: *(empty)*
-
 ## Run tests
 
 ```bash
