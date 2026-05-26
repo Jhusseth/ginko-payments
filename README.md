@@ -184,12 +184,16 @@ End-to-end flows for creating payment orders (with idempotency support), transit
 - [x] Time Limiter (5s timeout)
 - [x] Fallback methods preserving domain exceptions
 
+### Health Checks & Metrics
+
+- [x] Spring Boot Actuator (`/actuator/health`, `/actuator/info`, `/actuator/metrics`)
+- [x] Prometheus endpoint (`/actuator/prometheus`)
+- [x] Custom `MetricsConfig`: gauges for `providers.count` and `payment.orders.count`
+
 ## Pending
 
 - Add authentication/authorization (Spring Security + JWT)
-- Add metrics and health checks (Spring Boot Actuator + Micrometer)
 - Migrate to PostgreSQL with Testcontainers for more realistic integration tests
 - Add Colombian NIT format validation
-- Add structured (JSON) logging
 - Add Rate Limiter per endpoint with Resilience4j
 - Add automatic mapping with MapStruct if the number of DTOs grows

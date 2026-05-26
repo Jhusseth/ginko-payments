@@ -27,6 +27,23 @@ springdoc:
     path: /api/v1/swagger-ui.html
     operations-sorter: method
 
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+  info:
+    env:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
 app:
   cors:
     allowed-origins: "http://localhost:8080"
